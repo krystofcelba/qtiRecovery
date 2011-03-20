@@ -20,7 +20,7 @@ public:
     int precommand_cb_g(irecv_client_t client, const irecv_event_t* event);
     int postcommand_cb_g(irecv_client_t client, const irecv_event_t* event);
 
-public slots:
+private slots:
     void showDeviceInfo();
     void sendCommand();
 

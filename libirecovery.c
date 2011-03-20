@@ -602,7 +602,6 @@ irecv_error_t irecv_send_command(irecv_client_t client, char* command) {
 		event.data = command;
 		event.type = IRECV_PRECOMMAND;
 		if(client->precommand_callback(client, &event)) {
-                       printf("blll");
 			return IRECV_E_SUCCESS;
 		}
 	}

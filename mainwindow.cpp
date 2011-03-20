@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::showDeviceInfo()
 {
-    printf("ahoj\n");
+    //TODO show dialog with device info
 }
 
 void MainWindow::sendCommand()
