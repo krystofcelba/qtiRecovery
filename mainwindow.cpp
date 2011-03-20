@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
                     break;
 
             if (i == 5) {
-                    qApp->quit();
+                    exit(-1);
             }
     }
 
@@ -92,42 +92,44 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::showDeviceInfo()
 {
-    char info[1000];
+    QString info = QString("");
     int ret;
     unsigned int cpid, bdid;
     unsigned long long ecid;
     unsigned char srnm[12], imei[15];
 
-    //sprintf(info, "%sProduct: %s\nModel: %s\nBoard id: %s\nChip id: %s\n", info, device->product, device->model, device->board_id, device->chip_id);
+
+    info.sprintf("%sProduct: %s\n", info.toAscii().data(), device->product);
+    info.sprintf("%sModel: %s\n", info.toAscii().data(), device->model);
 
     ret = irecv_get_cpid(client, &cpid);
     if(ret == IRECV_E_SUCCESS)
     {
-        sprintf(info, "%sCPID: %d\n", info, cpid);
+        info.sprintf("%sCPID: %d\n", info.toAscii().data(), cpid);
     }
 
     ret = irecv_get_bdid(client, &bdid);
     if(ret == IRECV_E_SUCCESS)
     {
-        sprintf(info, "%sBDID: %d\n", info, bdid);
+        info.sprintf("%sBDID: %d\n", info.toAscii().data(), bdid);
     }
 
     ret = irecv_get_ecid(client, &ecid);
     if(ret == IRECV_E_SUCCESS)
     {
-        sprintf(info, "%sECID: %lld\n", info, ecid);
+        info.sprintf("%sECID: %lld\n", info.toAscii().data(), ecid);
     }
 
     ret = irecv_get_srnm(client, srnm);
     if(ret == IRECV_E_SUCCESS)
     {
-        sprintf(info, "%sSRNM: %s\n", info, srnm);
+        info.sprintf("%sSRNM: %s\n", info.toAscii().data(), srnm);
     }
 
     ret = irecv_get_imei(client, imei);
     if(ret == IRECV_E_SUCCESS)
     {
-        sprintf(info, "%sIMEI: %s\n", info, imei);
+        info.sprintf("%sIMEI: %s\n", info.toAscii().data(), imei);
     }
 
 
