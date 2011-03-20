@@ -1,5 +1,24 @@
+/**
+  * qtiRecovery - mainwindow.h
+  * Copyright (C) 2011 Krystof Celba
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "QMessageBox"
 
 MainWindow *thisPointer;
 
@@ -42,27 +61,68 @@ MainWindow::MainWindow(QWidget *parent) :
         irecv_event_subscribe(client, IRECV_PRECOMMAND, &precommand_cb, NULL);
         irecv_event_subscribe(client, IRECV_POSTCOMMAND, &postcommand_cb, NULL);
 
-        QString statusString = QString("");
-        unsigned long long ecid;
-        unsigned char srnm[12];
+        irecv_get_device(client, &device);
 
-        int ret = irecv_get_ecid(client, &ecid);
+        QString statusString = QString("");
+        unsigned char srnm[12], imei[15];
+
+        int ret = irecv_get_srnm(client, srnm);
         if(ret == IRECV_E_SUCCESS)
         {
-                statusString.sprintf("Device connected ECID: %lld", ecid);
-                ui->deviceInfoLabel->setText(statusString);
+            statusString.sprintf("%s connected. Serial number: %s", device->product, srnm);
+            ui->deviceInfoLabel->setText(statusString);
         }
     }
 }
 
 void MainWindow::showDeviceInfo()
 {
-    //TODO show dialog with device info
+    char info[1000];
+    int ret;
+    unsigned int cpid, bdid;
+    unsigned long long ecid;
+    unsigned char srnm[12], imei[15];
+
+    //sprintf(info, "%sProduct: %s\nModel: %s\nBoard id: %s\nChip id: %s\n", info, device->product, device->model, device->board_id, device->chip_id);
+
+    ret = irecv_get_cpid(client, &cpid);
+    if(ret == IRECV_E_SUCCESS)
+    {
+        sprintf(info, "%sCPID: %d\n", info, cpid);
+    }
+
+    ret = irecv_get_bdid(client, &bdid);
+    if(ret == IRECV_E_SUCCESS)
+    {
+        sprintf(info, "%sBDID: %d\n", info, bdid);
+    }
+
+    ret = irecv_get_ecid(client, &ecid);
+    if(ret == IRECV_E_SUCCESS)
+    {
+        sprintf(info, "%sECID: %lld\n", info, ecid);
+    }
+
+    ret = irecv_get_srnm(client, srnm);
+    if(ret == IRECV_E_SUCCESS)
+    {
+        sprintf(info, "%sSRNM: %s\n", info, srnm);
+    }
+
+    ret = irecv_get_imei(client, imei);
+    if(ret == IRECV_E_SUCCESS)
+    {
+        sprintf(info, "%sIMEI: %s\n", info, imei);
+    }
+
+
+    QMessageBox *dialog = new QMessageBox(this);
+    dialog->setText(info);
+    dialog->exec();
 }
 
 void MainWindow::sendCommand()
 {
-
     QString tmp = QString("> ");
     tmp.append(ui->lineEdit->text());
     ui->textEdit->append(tmp);
@@ -174,5 +234,6 @@ int MainWindow::progress_cb_g(irecv_client_t client, const irecv_event_t* event)
 MainWindow::~MainWindow()
 {
     irecv_close(client);
+    irecv_exit();
     delete ui;
 }
