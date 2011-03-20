@@ -1,5 +1,5 @@
 /**
-  * qtiRecovery - mainwindow.h
+  * qtiRecovery - mainwindow.cpp
   * Copyright (C) 2011 Krystof Celba
   *
   * This program is free software: you can redistribute it and/or modify
