@@ -21,6 +21,7 @@
 
 #include <QMainWindow>
 #include "libirecovery.h"
+#include "QKeyEvent"
 
 namespace Ui {
     class MainWindow;
@@ -44,8 +45,10 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    void loadHistory();
     irecv_client_t client;
     irecv_device *device;
+
 };
 
 #endif // MAINWINDOW_H

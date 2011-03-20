@@ -19,6 +19,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "QMessageBox"
+#include "QCompleter"
+#include "QFile"
+#include "QList"
+
+
+
+#ifdef __APPLE__
+    #define FILE_HISTORY_PATH "../Resources/history"
+#else
+    #define FILE_HISTORY_PATH "history"
+#endif
+
 
 MainWindow *thisPointer;
 
@@ -34,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     thisPointer = this;
+
+    this->loadHistory();
 
     connect(ui->actionDevice_info , SIGNAL(triggered()), this, SLOT(showDeviceInfo()));
     connect(ui->pushButton , SIGNAL(clicked()), this, SLOT(sendCommand()));
@@ -74,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 }
+
 
 void MainWindow::showDeviceInfo()
 {
@@ -121,14 +136,52 @@ void MainWindow::showDeviceInfo()
     dialog->exec();
 }
 
+void MainWindow::loadHistory()
+{
+    QFile file(FILE_HISTORY_PATH);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+    QByteArray line = file.readLine();
+    QList<QString> list;
+    list.append(line);
+    while (!line.isNull())
+    {
+        line = file.readLine();
+        if(line.count()!=0)
+        {
+            line.remove(line.count()-1, 1);
+            list.append(line);
+        }
+    }
+    for(int i = list.count()-1; i >= 0; i--)
+    {
+        ui->commandLine->addItem(list.at(i));
+    }
+}
+
+void appendToHistory(QString text)
+{
+    QFile file(FILE_HISTORY_PATH);
+    text.append("\n");
+    if (file.open(QIODevice::ReadWrite | QIODevice::Append))
+    {
+        file.write((const char *)text.toAscii().data());
+
+    }
+    file.close();
+}
+
 void MainWindow::sendCommand()
 {
+    ui->commandLine->addItem(ui->commandLine->currentText());
+
+    appendToHistory(ui->commandLine->currentText());
+
     QString tmp = QString("> ");
-    tmp.append(ui->lineEdit->text());
+    tmp.append(ui->commandLine->currentText());
     ui->textEdit->append(tmp);
 
-    char *cmd = ui->lineEdit->text().toAscii().data();
-    printf("%s",cmd);
+    char *cmd = ui->commandLine->currentText().toAscii().data();
     int error = irecv_send_command(client, cmd);
     if (error != IRECV_E_SUCCESS)
     {
@@ -140,6 +193,16 @@ void MainWindow::sendCommand()
 
 int received_cb(irecv_client_t client, const irecv_event_t* event)
 {
+    printf("received\n");
+    if (event->type == IRECV_RECEIVED) {
+            int i = 0;
+            int size = event->size;
+            char* data = event->data;
+            for (i = 0; i < size; i++)
+            {
+                printf("%c", data[i]);
+            }
+    }
     return thisPointer->received_cb_g(client, event);
 }
 
@@ -168,7 +231,8 @@ int MainWindow::received_cb_g(irecv_client_t client, const irecv_event_t* event)
             for (i = 0; i < size; i++)
             {
                 QString tmp = QString("");
-                tmp.sprintf("%c", data[i]);
+                printf("%c", data[i]);
+                tmp.sprintf("%s%c", tmp.toAscii().data(), data[i]);
                 ui->textEdit->append(tmp);
             }
     }
@@ -206,7 +270,7 @@ int MainWindow::postcommand_cb_g(irecv_client_t client, const irecv_event_t* eve
                             return error;
                     }
                     QString tmp = QString("");
-                    tmp.sprintf("%s\n", value);
+                    tmp.sprintf("%s%s\n", tmp.toAscii().data(), value);
                     ui->textEdit->append(tmp);
                     free(value);
             }
