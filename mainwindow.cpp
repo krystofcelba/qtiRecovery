@@ -37,7 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     if(client)
     {
+        irecv_event_subscribe(client, IRECV_PROGRESS, &progress_cb, NULL);
         irecv_event_subscribe(client, IRECV_RECEIVED, &received_cb, NULL);
+        irecv_event_subscribe(client, IRECV_PRECOMMAND, &precommand_cb, NULL);
+        irecv_event_subscribe(client, IRECV_POSTCOMMAND, &postcommand_cb, NULL);
 
         QString statusString = QString("");
         unsigned long long ecid;
@@ -59,7 +62,13 @@ void MainWindow::showDeviceInfo()
 
 void MainWindow::sendCommand()
 {
+
+    QString tmp = QString("> ");
+    tmp.append(ui->lineEdit->text());
+    ui->textEdit->append(tmp);
+
     char *cmd = ui->lineEdit->text().toAscii().data();
+    printf("%s",cmd);
     int error = irecv_send_command(client, cmd);
     if (error != IRECV_E_SUCCESS)
     {
@@ -81,7 +90,6 @@ int precommand_cb(irecv_client_t client, const irecv_event_t* event)
 
 int postcommand_cb(irecv_client_t client, const irecv_event_t* event)
 {
-    printf("ppp");
     return thisPointer->postcommand_cb_g(client, event);
 }
 
